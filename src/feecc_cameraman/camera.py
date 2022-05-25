@@ -10,10 +10,14 @@ from datetime import datetime
 from uuid import uuid4
 
 from loguru import logger
+from typed_getenv import getenv
 
 MINIMAL_RECORD_DURATION_SEC: int = 3
-FFMPEG_COMMAND: str = os.getenv(
-    "FFMPEG_COMMAND", 'ffmpeg -loglevel warning -rtsp_transport tcp -i "RTSP_STREAM" -r 25 -c copy -map 0 FILENAME'
+FFMPEG_COMMAND: str = getenv(
+    "FFMPEG_COMMAND",
+    default='ffmpeg -loglevel warning -rtsp_transport tcp -i "RTSP_STREAM" -r 25 -c copy -map 0 FILENAME',
+    optional=True,
+    var_type=str,
 )
 
 
@@ -139,8 +143,7 @@ class Recording:
 RECORDS: tp.Dict[str, Recording] = {}
 CAMERAS: tp.Dict[int, Camera] = {}
 
-cameras_config: tp.Optional[str] = os.getenv("CAMERAS_CONFIG")
-assert cameras_config, "CAMERAS_CONFIG environment variable has not been provided"
+cameras_config: str = getenv("CAMERAS_CONFIG", var_type=str)
 config: tp.List[str] = json.loads(cameras_config)
 
 for entry in config:
