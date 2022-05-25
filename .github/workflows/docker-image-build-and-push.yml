@@ -3,11 +3,11 @@ name: Docker image build and push
 on:
   push:
     branches:
-      - development
-      - main
+      - dev
+      - master
   pull_request:
     branches:
-      - main
+      - master
 
 jobs:
   build-and-push-image:
