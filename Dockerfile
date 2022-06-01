@@ -12,4 +12,6 @@ COPY --from=requirements-stage /tmp/requirements.txt /requirements.txt
 RUN pip install --no-cache-dir --upgrade -r /requirements.txt
 COPY ./src /src
 WORKDIR /src
+HEALTHCHECK --interval=5s --timeout=3s --start-period=5s --retries=12 \
+    CMD curl --fail http://localhost:8081/docs || exit 1
 CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8081"]
