@@ -1,8 +1,7 @@
 import asyncio
-import typing as tp
 
 import uvicorn
-from fastapi import Depends, FastAPI, status
+from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 
@@ -13,7 +12,6 @@ from feecc_cameraman.dependencies import get_camera_by_number, get_record_by_id
 from feecc_cameraman.models import (
     CameraList,
     CameraModel,
-    GenericResponse,
     RecordData,
     RecordList,
     StartRecordResponse,
@@ -45,11 +43,11 @@ app.add_middleware(
 @app.post(
     "/camera/{camera_number}/start",
     dependencies=[Depends(authenticate)],
-    response_model=tp.Union[StartRecordResponse, GenericResponse],  # type: ignore
+    response_model=StartRecordResponse,
 )
 async def start_recording(
     camera: Camera = Depends(get_camera_by_number),
-) -> tp.Union[StartRecordResponse, GenericResponse]:
+) -> StartRecordResponse:
     """start recording a video using specified camera"""
     record = Recording(camera.rtsp_stream_link)
 
@@ -67,15 +65,15 @@ async def start_recording(
     except Exception as e:
         message = f"Failed to start recording video for recording {record.record_id}: {e}"
         logger.error(message)
-        return GenericResponse(status=status.HTTP_500_INTERNAL_SERVER_ERROR, details=message)
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message) from e
 
 
 @app.post(
     "/record/{record_id}/stop",
     dependencies=[Depends(authenticate)],
-    response_model=tp.Union[StopRecordResponse, GenericResponse],  # type: ignore
+    response_model=StopRecordResponse,
 )
-async def end_recording(record: Recording = Depends(get_record_by_id)) -> tp.Union[StopRecordResponse, GenericResponse]:
+async def end_recording(record: Recording = Depends(get_record_by_id)) -> StopRecordResponse:
     """finish recording a video"""
     try:
         if not record.is_ongoing:
@@ -89,7 +87,7 @@ async def end_recording(record: Recording = Depends(get_record_by_id)) -> tp.Uni
     except Exception as e:
         message = f"Failed to stop recording video for recording {record.record_id}: {e}"
         logger.error(message)
-        return GenericResponse(status=status.HTTP_500_INTERNAL_SERVER_ERROR, details=message)
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message) from e
 
 
 @app.get("/cameras", response_model=CameraList)
