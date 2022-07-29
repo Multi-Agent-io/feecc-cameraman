@@ -46,6 +46,6 @@ To configure your Cameraman deployment edit the environment variables, provided 
 - `PRODUCTION_ENVIRONMENT` - Leave null if you want testing credentials to work, otherwise set it to `true`
 - `FFMPEG_COMMAND` - ffmpeg command used for capturing the video stream
 - `CAMERAS_CONFIG` - A JSON-like string for camera configuration. This string represents a JSON list of strings, each
-  one describing an RTSP stream ("-" separated stream number, stream socket and RTSP stream URI). Example:
+  one describing an RTSP stream ("-" separated stream number and RTSP stream URI). Example:
 
-  ```'["1-192.168.88.239:554-rtsp://login:password@192.168.88.239:554/Streaming/Channels/101"]'```
+  ```'["1-rtsp://login:password@192.168.88.239:554/Streaming/Channels/101"]'```

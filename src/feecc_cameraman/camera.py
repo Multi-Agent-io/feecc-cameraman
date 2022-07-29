@@ -9,6 +9,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from uuid import uuid4
 
+import yarl
 from loguru import logger
 from typed_getenv import getenv
 
@@ -21,16 +22,21 @@ FFMPEG_COMMAND: str = getenv(
 )
 
 
-@dataclass(frozen=True)
 class Camera:
     """a wrapper for the video camera config"""
 
-    number: int
-    socket_address: str
-    rtsp_stream_link: str
-
-    def __post_init__(self) -> None:
+    def __init__(self, camera_number: int, rtsp_stream_link: str) -> None:
+        self.number: int = camera_number
+        self.uri: yarl.URL = yarl.URL(rtsp_stream_link)
         self.is_up()
+
+    @property
+    def rtsp_stream_link(self) -> str:
+        return str(self.uri)
+
+    @property
+    def socket_address(self) -> str:
+        return f"{self.uri.host}:{self.uri.port}"
 
     def __str__(self) -> str:
         return f"Camera no.{self.number} host at {self.socket_address}"
@@ -41,8 +47,7 @@ class Camera:
         s.settimeout(0.25)
 
         try:
-            ip, port = self.socket_address.split(":", 1)
-            s.connect((ip, int(port)))
+            s.connect((self.uri.host, self.uri.port))
             is_up = True
             logger.debug(f"{self} is up")
         except socket.error:
@@ -147,10 +152,9 @@ cameras_config: str = getenv("CAMERAS_CONFIG", var_type=str)
 config: tp.List[str] = json.loads(cameras_config)
 
 for entry in config:
-    number, socket_address, rtsp = entry.split("-", 2)
+    number, rtsp = entry.split("-", 1)
     CAMERAS[int(number)] = Camera(
-        number=int(number),
-        socket_address=socket_address,
+        camera_number=int(number),
         rtsp_stream_link=rtsp,
     )
 
